@@ -7,7 +7,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 # --- CONFIGURATION ---
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8945239395:AAF8VDs0pLF44yv7qUY3I0Q0QK7p2x6WRwo") 
-ADMIN_CHAT_ID = int(os.environ.get("ADMIN_CHAT_ID", "6119216457")) # 👈 Aapka New User ID
+ADMIN_CHAT_ID = int(os.environ.get("ADMIN_CHAT_ID", "6119216457"))
 MANAGER_HANDLE = "@HerryO23"
 
 # LINKS
@@ -15,10 +15,10 @@ REGISTER_URL = "https://h5.hipayus.com/#/register?u_userlink=OW7MNH9I"
 DOWNLOAD_URL = "https://app.hipayus.com/?app=HiPay&utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAb21jcAToIJtwZG9mAmV4dG4DYWVtAjExAHNydGMGYXBwX2lkDzU2NzA2NzM0MzM1MjQyNwABpxuMmYix_F3JC9u2oBc-DOxseNpXQDOATExDMFM0o_tUVhzuiPsAgzVnqvSl_aem_y-qIgawYG-sRerOk8uYm3g"
 CHANNEL_URL = "https://t.me/CBRETURN0" 
 
-# 🔴 VIDEOS FILE IDs (Pehle ID nikalein phir yahan paste karein)
-REGISTRATION_VIDEO_ID = "PASTE_REGISTRATION_VIDEO_FILE_ID_HERE"
-WALLET_BIND_VIDEO_ID = "PASTE_WALLET_BIND_VIDEO_FILE_ID_HERE"
-BUY_SELL_VIDEO_ID = "PASTE_BUY_SELL_VIDEO_FILE_ID_HERE"
+# --- UPDATED VIDEO FILE IDs ---
+REGISTRATION_VIDEO_ID = "BAACAgUAAxkBAAEtio1qfrXByZp2B6hw0tMU8VfBYIhqUwACgiMAAt_g8Vcd4OeB13MU1j0E"
+WALLET_BIND_VIDEO_ID = "BAACAgUAAxkBAAEtio9qfrYZrHfwsruvhcEVL4NT5ZO6fAAChCMAAt_g8VdTtE-MjffbZz0E"
+BUY_SELL_VIDEO_ID = "BAACAgUAAxkBAAEtipNqfrYvQm9g7VlVr--jwd7Vnyl-nwAChBoAAgqH-FcuJeBYE-9ijT0E"
 
 # --- MAIN MENU ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -46,7 +46,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• Instant ₹100 Bonus on 1st Wallet Bind | Up to 3.2% Commission\n\n"
         "Niche kisi bhi option par click karein:"
     )
-    await update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+    if update.callback_query:
+        await update.callback_query.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+    else:
+        await update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
 
 # --- BUTTON CLICK HANDLER ---
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -70,14 +73,9 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'main_menu':
         await start(update, context)
 
-# --- VIDEO FILE ID GENERATOR (FOR ADMIN) ---
-async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id == ADMIN_CHAT_ID:
-        file_id = update.message.video.file_id
-        await update.message.reply_text(f"🎬 **Video File ID:**\n\n`{file_id}`", parse_mode='Markdown')
-
-# --- USER TEXT MESSAGES HANDLER ---
+# --- USER TEXT MESSAGES & SUPPORT HANDLER ---
 async def handle_user_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Manager reply handler
     if update.effective_user.id == ADMIN_CHAT_ID and update.message.reply_to_message:
         try:
             orig_text = update.message.reply_to_message.text
@@ -88,6 +86,7 @@ async def handle_user_messages(update: Update, context: ContextTypes.DEFAULT_TYP
             await update.message.reply_text(f"❌ Reply bhejne me error aaya: {e}")
         return
 
+    # User message to manager
     if context.user_data.get('waiting_for_support'):
         user = update.effective_user
         admin_notification = f"📩 **NEW MESSAGE FOR MANAGER ({MANAGER_HANDLE})!**\n\n👤 **From:** {user.first_name} (@{user.username})\n🆔 **User ID:** `{user.id}`\n\n💬 **Message:** {update.message.text}\n\n*(Is message ka 'Reply' karke jawab likhein)*"
@@ -99,8 +98,7 @@ if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_click))
-    app.add_handler(MessageHandler(filters.VIDEO, handle_video))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_messages))
     
     app.run_polling()
-        
+                               
