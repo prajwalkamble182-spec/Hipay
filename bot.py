@@ -128,3 +128,12 @@ if __name__ == '__main__':
     
     app.run_polling()
     
+# Iss
+async def get_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.photo:
+        file_id = update.message.photo[-1].file_id
+        print(f"--- FOTO ID: {file_id} ---")
+        await update.message.reply_text(f"✅ Photo ID mil gayi: `{file_id}`", parse_mode='Markdown')
+
+# app.run_polling() se pehle ye line add karein
+app.add_handler(MessageHandler(filters.PHOTO, get_id))
