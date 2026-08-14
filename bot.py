@@ -1,15 +1,16 @@
 import logging
 import os
 import threading
+import json
 from flask import Flask
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 
-# --- FLASK (Render Web Service Keep-Alive) ---
+# --- FLASK (Render Web Service Keep-Alive 24/7) ---
 app = Flask(__name__)
 @app.route('/')
 def home():
-    return "Bot is running!"
+    return "Bot is running 24/7!"
 
 def run_flask():
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
@@ -20,6 +21,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 BOT_TOKEN = "8945239395:AAF8VDs0pLF44yv7qUY3I0Q0QK7p2x6WRwo" 
 ADMIN_CHAT_ID = 6119216457
 MANAGER_HANDLE = "@HerryO23"
+USERS_FILE = "users.json"
 
 # LINKS
 REGISTER_URL = "https://h5.hipayus.com/#/register?u_userlink=OW7MNH9I" 
@@ -31,13 +33,31 @@ REG_VIDEO_URL = "https://t.me/CBRETURN0/258"
 BIND_VIDEO_URL = "https://t.me/CBRETURN0/259"
 BUY_SELL_VIDEO_ID = "BAACAgUAAxkBAAEtipNqfrYvQm9g7VlVr--jwd7Vnyl-nwAChBoAAgqH-FcuJeBYE-9ijT0E"
 
-# 🎁 DIRECT REWARDS PHOTO URL (ImgBB)
+# 🎁 HIGH-QUALITY REWARDS PHOTO DIRECT LINK
 REWARDS_PHOTO_URL = "https://i.ibb.co/GQRmNm92/image.jpg"
 
-# --- MAIN MENU ---
+# --- USER STORAGE (FOR BROADCAST) ---
+def load_users():
+    if os.path.exists(USERS_FILE):
+        try:
+            with open(USERS_FILE, "r") as f:
+                return set(json.load(f))
+        except Exception:
+            return set()
+    return set()
+
+def save_user(user_id):
+    users = load_users()
+    if user_id not in users:
+        users.add(user_id)
+        with open(USERS_FILE, "w") as f:
+            json.dump(list(users), f)
+
+# --- START / WELCOME HANDLER ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_name = update.effective_user.first_name
-    
+    user = update.effective_user
+    save_user(user.id)  # Auto save for broadcast
+
     keyboard = [
         [InlineKeyboardButton("📢 Join Official Telegram Channel", url=CHANNEL_URL)],
         [InlineKeyboardButton("📝 Register Hipay Now", url=REGISTER_URL),
@@ -51,21 +71,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("💬 Talk to Manager", callback_data='contact_manager')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
+
     welcome_text = (
-        f"👋 **Welcome {user_name} to Hipay Automated Bot!**\n\n"
+        f"👋 **Welcome {user.first_name} to Hipay Automated Bot!**\n\n"
         "⚡ **Platform Features & Tutorial Guides:**\n"
         "• Latest updates ke liye hamara Official Telegram Channel join karein.\n"
         "• Registration, App Download aur Wallet Bind ke links niche hain.\n"
         "• Instant ₹100 Bonus on 1st Wallet Bind | Up to 3.2% Commission\n\n"
         "Niche kisi bhi option par click karein:"
     )
+    
     if update.callback_query:
         await update.callback_query.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
     else:
         await update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
 
-# --- BUTTON CLICK HANDLER ---
+# --- BUTTON HANDLER ---
 async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -84,6 +105,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "⚡ *Abhi Register aur Wallet bind karke apna bonus claim karein!*"
         )
         try:
+            # Send HD Photo directly
             await query.message.reply_photo(
                 photo=REWARDS_PHOTO_URL, 
                 caption=rewards_caption, 
@@ -91,9 +113,8 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_markup=InlineKeyboardMarkup(back_button)
             )
         except Exception:
-            # Direct link fallback
             await query.message.reply_text(
-                f"{rewards_caption}\n\n🔗 **Poster:** {REWARDS_PHOTO_URL}", 
+                rewards_caption, 
                 parse_mode='Markdown', 
                 reply_markup=InlineKeyboardMarkup(back_button)
             )
@@ -103,9 +124,33 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'main_menu':
         await start(update, context)
 
-# --- USER TO MANAGER CHAT ---
+# --- ADMIN BROADCAST HANDLER ---
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_CHAT_ID:
+        return
+
+    if not context.args:
+        await update.message.reply_text("⚠️ **Format:** `/broadcast Aapka message yahan`", parse_mode='Markdown')
+        return
+
+    message_to_send = " ".join(context.args)
+    users = load_users()
+    sent_count = 0
+
+    await update.message.reply_text(f"📢 Broadcasting to {len(users)} users...")
+
+    for user_id in users:
+        try:
+            await context.bot.send_message(chat_id=user_id, text=f"📢 **IMPORTANT ANNOUNCEMENT:**\n\n{message_to_send}", parse_mode='Markdown')
+            sent_count += 1
+        except Exception:
+            pass
+
+    await update.message.reply_text(f"✅ **Broadcast Done!**\nDelivered to: `{sent_count}/{len(users)}` users.", parse_mode='Markdown')
+
+# --- LIVE MANAGER SUPPORT HANDLER ---
 async def handle_user_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Manager Reply to User
+    # Manager Admin Reply Logic
     if update.effective_user.id == ADMIN_CHAT_ID and update.message.reply_to_message:
         try:
             orig_text = update.message.reply_to_message.text
@@ -116,7 +161,7 @@ async def handle_user_messages(update: Update, context: ContextTypes.DEFAULT_TYP
             await update.message.reply_text(f"❌ Error: {e}")
         return
 
-    # User send to Manager
+    # User Support Mode Logic
     if context.user_data.get('waiting_for_support'):
         user = update.effective_user
         admin_notification = f"📩 **NEW MESSAGE FOR MANAGER ({MANAGER_HANDLE})!**\n\n👤 **From:** {user.first_name} (@{user.username})\n🆔 **User ID:** `{user.id}`\n\n💬 **Message:** {update.message.text}\n\n*(Is message ka 'Reply' karke jawab likhein)*"
@@ -128,8 +173,8 @@ if __name__ == '__main__':
     threading.Thread(target=run_flask).start()
     app_bot = ApplicationBuilder().token(BOT_TOKEN).build()
     app_bot.add_handler(CommandHandler("start", start))
+    app_bot.add_handler(CommandHandler("broadcast", broadcast))
     app_bot.add_handler(CallbackQueryHandler(button_click))
     app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_messages))
     
     app_bot.run_polling()
-    
