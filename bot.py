@@ -20,8 +20,8 @@ REGISTRATION_VIDEO_ID = "BAACAgUAAxkBAAEtio1qfrXByZp2B6hw0tMU8VfBYIhqUwACgiMAAt_
 WALLET_BIND_VIDEO_ID = "BAACAgUAAxkBAAEtio9qfrYZrHfwsruvhcEVL4NT5ZO6fAAChCMAAt_g8VdTtE-MjffbZz0E"
 BUY_SELL_VIDEO_ID = "BAACAgUAAxkBAAEtipNqfrYvQm9g7VlVr--jwd7Vnyl-nwAChBoAAgqH-FcuJeBYE-9ijT0E"
 
-# 🎁 REWARDS PHOTO FILE ID
-REWARDS_PHOTO_ID = "AgACAgUAAxkBAAEtisdqfr0sI6uL5gsnJlii5aszi-GytAACZBVrG9_g8VfFgpgyjfd3aQEAAwIAA3kAAz0E"
+# 🎁 UPDATED REWARDS PHOTO FILE ID
+REWARDS_PHOTO_ID = "AgACAgUAAxkBAAEtistqfr2d3EmTEx5uG3bgjn-YLFk6VAAC5BRrG2Zq2VdXQqp2O1VacQEAAwIAA3kAAz0E"
 
 # --- MAIN MENU ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -114,4 +114,3 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_messages))
     
     app.run_polling()
-    
