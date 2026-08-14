@@ -15,9 +15,9 @@ REGISTER_URL = "https://h5.hipayus.com/#/register?u_userlink=OW7MNH9I"
 DOWNLOAD_URL = "https://app.hipayus.com/?app=HiPay&utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAb21jcAToIJtwZG9mAmV4dG4DYWVtAjExAHNydGMGYXBwX2lkDzU2NzA2NzM0MzM1MjQyNwABpxuMmYix_F3JC9u2oBc-DOxseNpXQDOATExDMFM0o_tUVhzuiPsAgzVnqvSl_aem_y-qIgawYG-sRerOk8uYm3g"
 CHANNEL_URL = "https://t.me/CBRETURN0" 
 
-# --- UPDATED VIDEO FILE IDs ---
-REGISTRATION_VIDEO_ID = "BAACAgUAAxkBAAEtio1qfrXByZp2B6hw0tMU8VfBYIhqUwACgiMAAt_g8Vcd4OeB13MU1j0E"
-WALLET_BIND_VIDEO_ID = "BAACAgUAAxkBAAEtio9qfrYZrHfwsruvhcEVL4NT5ZO6fAAChCMAAt_g8VdTtE-MjffbZz0E"
+# VIDEO LINKS & FILE IDs
+REG_VIDEO_URL = "https://t.me/CBRETURN0/258"
+WALLET_VIDEO_URL = "https://t.me/CBRETURN0/259"
 BUY_SELL_VIDEO_ID = "BAACAgUAAxkBAAEtipNqfrYvQm9g7VlVr--jwd7Vnyl-nwAChBoAAgqH-FcuJeBYE-9ijT0E"
 
 # --- MAIN MENU ---
@@ -29,8 +29,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("📝 Register Hipay Now", url=REGISTER_URL),
          InlineKeyboardButton("📥 Download Hipay App", url=DOWNLOAD_URL)],
         [InlineKeyboardButton("🔗 Bind Wallet Now", url=REGISTER_URL)],
-        [InlineKeyboardButton("📹 Registration Video", callback_data='video_reg'),
-         InlineKeyboardButton("📹 Wallet Bind Video", callback_data='video_bind')],
+        [InlineKeyboardButton("📹 Registration Video", url=REG_VIDEO_URL),
+         InlineKeyboardButton("📹 Wallet Bind Video", url=WALLET_VIDEO_URL)],
         [InlineKeyboardButton("📹 Buy / Sell Video", callback_data='video_buysell')],
         [InlineKeyboardButton("📊 Commission & Rates", callback_data='rates'),
          InlineKeyboardButton("🎁 Rewards Info", callback_data='rewards')],
@@ -57,11 +57,7 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     back_button = [[InlineKeyboardButton("⬅️ Back to Main Menu", callback_data='main_menu')]]
 
-    if query.data == 'video_reg':
-        await query.message.reply_video(video=REGISTRATION_VIDEO_ID, caption="📹 **Registration Guide Video**", reply_markup=InlineKeyboardMarkup(back_button))
-    elif query.data == 'video_bind':
-        await query.message.reply_video(video=WALLET_BIND_VIDEO_ID, caption="📹 **How to Bind Wallet Video**", reply_markup=InlineKeyboardMarkup(back_button))
-    elif query.data == 'video_buysell':
+    if query.data == 'video_buysell':
         await query.message.reply_video(video=BUY_SELL_VIDEO_ID, caption="📹 **Buy / Sell Trading Video**", reply_markup=InlineKeyboardMarkup(back_button))
     elif query.data == 'rates':
         await query.edit_message_text("📊 **Commission Rates:** 3.2% Per Deal | USDT Rate: 107+ INR", reply_markup=InlineKeyboardMarkup(back_button))
@@ -75,7 +71,6 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # --- USER TEXT MESSAGES & SUPPORT HANDLER ---
 async def handle_user_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Manager reply handler
     if update.effective_user.id == ADMIN_CHAT_ID and update.message.reply_to_message:
         try:
             orig_text = update.message.reply_to_message.text
@@ -86,7 +81,6 @@ async def handle_user_messages(update: Update, context: ContextTypes.DEFAULT_TYP
             await update.message.reply_text(f"❌ Reply bhejne me error aaya: {e}")
         return
 
-    # User message to manager
     if context.user_data.get('waiting_for_support'):
         user = update.effective_user
         admin_notification = f"📩 **NEW MESSAGE FOR MANAGER ({MANAGER_HANDLE})!**\n\n👤 **From:** {user.first_name} (@{user.username})\n🆔 **User ID:** `{user.id}`\n\n💬 **Message:** {update.message.text}\n\n*(Is message ka 'Reply' karke jawab likhein)*"
@@ -101,4 +95,3 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_messages))
     
     app.run_polling()
-                               
