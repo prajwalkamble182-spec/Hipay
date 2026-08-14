@@ -3,7 +3,6 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 
-# Logging Configuration
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # --- CONFIGURATION ---
@@ -11,12 +10,12 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "8945239395:AAF8VDs0pLF44yv7qUY3I0Q0QK7p
 ADMIN_CHAT_ID = int(os.environ.get("ADMIN_CHAT_ID", "7263592657"))
 MANAGER_HANDLE = "@HerryO23"
 
-# 🔴 AAPKE ALL UPDATED LINKS
+# LINKS
 REGISTER_URL = "https://h5.hipayus.com/#/register?u_userlink=OW7MNH9I" 
 DOWNLOAD_URL = "https://app.hipayus.com/?app=HiPay&utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAb21jcAToIJtwZG9mAmV4dG4DYWVtAjExAHNydGMGYXBwX2lkDzU2NzA2NzM0MzM1MjQyNwABpxuMmYix_F3JC9u2oBc-DOxseNpXQDOATExDMFM0o_tUVhzuiPsAgzVnqvSl_aem_y-qIgawYG-sRerOk8uYm3g"
 CHANNEL_URL = "https://t.me/CBRETURN0" 
 
-# 🔴 VIDEOS FILE IDs (Telegram par video bhej kar mili hui IDs yahan paste karein)
+# 🔴 VIDEOS FILE IDs (Pehle ID nikalein phir yahan paste karein)
 REGISTRATION_VIDEO_ID = "PASTE_REGISTRATION_VIDEO_FILE_ID_HERE"
 WALLET_BIND_VIDEO_ID = "PASTE_WALLET_BIND_VIDEO_FILE_ID_HERE"
 BUY_SELL_VIDEO_ID = "PASTE_BUY_SELL_VIDEO_FILE_ID_HERE"
@@ -26,20 +25,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_name = update.effective_user.first_name
     
     keyboard = [
-        # 📢 TELEGRAM CHANNEL BUTTON
         [InlineKeyboardButton("📢 Join Official Telegram Channel", url=CHANNEL_URL)],
-
-        # 🔗 LINKS SECTION
         [InlineKeyboardButton("📝 Register Hipay Now", url=REGISTER_URL),
          InlineKeyboardButton("📥 Download Hipay App", url=DOWNLOAD_URL)],
         [InlineKeyboardButton("🔗 Bind Wallet Now", url=REGISTER_URL)],
-        
-        # 📹 VIDEO GUIDES
         [InlineKeyboardButton("📹 Registration Video", callback_data='video_reg'),
          InlineKeyboardButton("📹 Wallet Bind Video", callback_data='video_bind')],
         [InlineKeyboardButton("📹 Buy / Sell Video", callback_data='video_buysell')],
-        
-        # 📊 OTHER OPTIONS
         [InlineKeyboardButton("📊 Commission & Rates", callback_data='rates'),
          InlineKeyboardButton("🎁 Rewards Info", callback_data='rewards')],
         [InlineKeyboardButton("💬 Talk to Manager", callback_data='contact_manager')]
@@ -78,25 +70,24 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'main_menu':
         await start(update, context)
 
-# --- MESSAGE HANDLER & MANAGER REPLY SYSTEM ---
-async def handle_user_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # 1. Admin video bhejega toh File ID text me reply karega
-    if update.message.video and update.effective_user.id == ADMIN_CHAT_ID:
-        await update.message.reply_text(f"🎬 **Video File ID:**\n`{update.message.video.file_id}`", parse_mode='Markdown')
-        return
+# --- VIDEO FILE ID GENERATOR (FOR ADMIN) ---
+async def handle_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id == ADMIN_CHAT_ID:
+        file_id = update.message.video.file_id
+        await update.message.reply_text(f"🎬 **Video File ID:**\n\n`{file_id}`", parse_mode='Markdown')
 
-    # 2. Manager Support Reply Feature
+# --- USER TEXT MESSAGES HANDLER ---
+async def handle_user_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id == ADMIN_CHAT_ID and update.message.reply_to_message:
         try:
             orig_text = update.message.reply_to_message.text
             user_id = int(orig_text.split("User ID:** `")[1].split("`")[0])
             await context.bot.send_message(chat_id=user_id, text=f"💬 **Manager Reply ({MANAGER_HANDLE}):**\n\n{update.message.text}")
             await update.message.reply_text("✅ Reply bhej diya gaya hai!")
-        except: 
-            await update.message.reply_text("❌ Reply bhejne me error aaya.")
+        except Exception as e:
+            await update.message.reply_text(f"❌ Reply bhejne me error aaya: {e}")
         return
 
-    # 3. User forward message to Admin
     if context.user_data.get('waiting_for_support'):
         user = update.effective_user
         admin_notification = f"📩 **NEW MESSAGE FOR MANAGER ({MANAGER_HANDLE})!**\n\n👤 **From:** {user.first_name} (@{user.username})\n🆔 **User ID:** `{user.id}`\n\n💬 **Message:** {update.message.text}\n\n*(Is message ka 'Reply' karke jawab likhein)*"
@@ -108,8 +99,8 @@ if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_click))
-    app.add_handler(MessageHandler(filters.ALL, handle_user_messages))
+    app.add_handler(MessageHandler(filters.VIDEO, handle_video))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_messages))
     
-    print("Bot starting...")
     app.run_polling()
-                
+    
