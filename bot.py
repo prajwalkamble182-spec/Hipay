@@ -20,6 +20,9 @@ REGISTRATION_VIDEO_ID = "BAACAgUAAxkBAAEtio1qfrXByZp2B6hw0tMU8VfBYIhqUwACgiMAAt_
 WALLET_BIND_VIDEO_ID = "BAACAgUAAxkBAAEtio9qfrYZrHfwsruvhcEVL4NT5ZO6fAAChCMAAt_g8VdTtE-MjffbZz0E"
 BUY_SELL_VIDEO_ID = "BAACAgUAAxkBAAEtipNqfrYvQm9g7VlVr--jwd7Vnyl-nwAChBoAAgqH-FcuJeBYE-9ijT0E"
 
+# 🎁 REWARDS PHOTO FILE ID
+REWARDS_PHOTO_ID = "AgACAgUAAxkBAAEtisdqfr0sI6uL5gsnJlii5aszi-GytAACZBVrG9_g8VfFgpgyjfd3aQEAAwIAA3kAAz0E"
+
 # --- MAIN MENU ---
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_name = update.effective_user.first_name
@@ -66,7 +69,19 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == 'rates':
         await query.edit_message_text("📊 **Commission Rates:** 3.2% Per Deal | USDT Rate: 107+ INR", reply_markup=InlineKeyboardMarkup(back_button))
     elif query.data == 'rewards':
-        await query.edit_message_text("🎁 **Rewards Info:**\n• 1st Wallet Bind: ₹100 Instant\n• Up to 6 Wallets: ₹600 Rewards", reply_markup=InlineKeyboardMarkup(back_button))
+        rewards_caption = (
+            "🎁 **HIPAY EXCLUSIVE REWARDS & BONUSES** 🎁\n\n"
+            "💰 **1st Wallet Bind:** ₹100 Instant Bonus\n"
+            "🔥 **Up to 6 Wallets Bind:** ₹600 Total Rewards\n"
+            "📈 **Trading Profit:** Earn Up to 3.2% Commission per deal\n\n"
+            "⚡ *Abhi Register aur Wallet bind karke apna bonus claim karein!*"
+        )
+        await query.message.reply_photo(
+            photo=REWARDS_PHOTO_ID, 
+            caption=rewards_caption, 
+            parse_mode='Markdown', 
+            reply_markup=InlineKeyboardMarkup(back_button)
+        )
     elif query.data == 'contact_manager':
         context.user_data['waiting_for_support'] = True
         await query.message.reply_text(f"✍️ **Manager Support Mode Active:**\n\nApni pareshani ya sawal yahan likhkar bhejein.\nAap direct Manager {MANAGER_HANDLE} se connect ho jayenge.")
@@ -99,4 +114,4 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_messages))
     
     app.run_polling()
-                                        
+    
