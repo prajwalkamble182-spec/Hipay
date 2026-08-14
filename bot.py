@@ -7,7 +7,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 # --- CONFIGURATION ---
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "8945239395:AAF8VDs0pLF44yv7qUY3I0Q0QK7p2x6WRwo") 
-ADMIN_CHAT_ID = int(os.environ.get("ADMIN_CHAT_ID", "7263592657"))
+ADMIN_CHAT_ID = int(os.environ.get("ADMIN_CHAT_ID", "6119216457")) # 👈 Aapka New User ID
 MANAGER_HANDLE = "@HerryO23"
 
 # LINKS
@@ -103,4 +103,4 @@ if __name__ == '__main__':
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_messages))
     
     app.run_polling()
-    
+        
